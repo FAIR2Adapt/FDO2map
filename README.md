@@ -30,7 +30,25 @@ The script uses [schema.org](https://schema.org) annotations embedded in the RO-
 - **`schema:object`** — the dataset resource to visualize
 - **`schema:instrument`** — the dashboard application
 
-## Getting started
+## Web interface
+
+The easiest way to use FDO2map is via the web interface — no installation required:
+
+**[https://fair2adapt.github.io/FDO2map/](https://fair2adapt.github.io/FDO2map/)**
+
+1. Paste an RO-Crate PID (or click one of the examples)
+2. Enter an API key if the dataset is private (leave empty for public datasets)
+3. Click **Resolve and open dashboard**
+
+You can also link directly to a specific RO-Crate:
+
+```
+https://fair2adapt.github.io/FDO2map/#https://w3id.org/ro-id/24600867-23ca-4b97-be14-3aa63883c056
+```
+
+## Command-line interface
+
+For scripting or automation, use the Python CLI.
 
 ### Prerequisites
 
