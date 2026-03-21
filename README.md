@@ -30,13 +30,31 @@ The script uses [schema.org](https://schema.org) annotations embedded in the RO-
 - **`schema:object`** — the dataset resource to visualize
 - **`schema:instrument`** — the dashboard application
 
-## Installation
+## Getting started
+
+### Prerequisites
+
+- Python 3.10 or later
+- A [ROHub](https://reliance.rohub.org/) account (free, needed to query RO-Crate metadata)
+
+### Clone the repository
 
 ```bash
+git clone https://github.com/FAIR2Adapt/FDO2map.git
+cd FDO2map
+```
+
+### Set up a Python environment
+
+```bash
+python -m venv venv
+source venv/bin/activate   # On Windows: venv\Scripts\activate
 pip install rohub
 ```
 
-You also need ROHub credentials in `~/rohub_credentials.json`:
+### Configure ROHub credentials
+
+Create `~/rohub_credentials.json` with your ROHub account:
 
 ```json
 {
@@ -45,13 +63,13 @@ You also need ROHub credentials in `~/rohub_credentials.json`:
 }
 ```
 
-## Usage
+### Run
 
 ```bash
 python fdo2map.py <RO-Crate PID>
 ```
 
-For private datasets, the script prompts for an API key.
+For private datasets, the script prompts for an API key. For public datasets, press Enter to skip.
 
 ## Examples
 
