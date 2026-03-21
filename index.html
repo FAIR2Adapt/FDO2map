@@ -276,11 +276,9 @@ async function resolve() {
       finalUrl += "::token=" + token;
     }
 
-    setStatus("success", "Resolved! Opening dashboard...");
     setStep(4, "done");
-
-    // Small delay so user can see the success state
-    setTimeout(() => { window.open(finalUrl, "_blank"); }, 500);
+    setStatus("success", "Resolved! Redirecting to dashboard...");
+    window.location.href = finalUrl;
 
   } catch (err) {
     setStatus("error", err.message);
