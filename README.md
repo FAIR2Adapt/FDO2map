@@ -100,4 +100,4 @@ The visualization dashboard is [gridlook](https://github.com/FAIR2Adapt/gridlook
 
 ## License
 
-Apache-2.0
+MIT License
