@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FDO2map — FAIR Digital Object to Map</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f7fa;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      max-width: 720px;
+      width: 100%;
+      padding: 2rem 1.5rem;
+    }
+    h1 { font-size: 2rem; margin-bottom: 0.25rem; }
+    .subtitle { color: #666; margin-bottom: 2rem; font-size: 1.05rem; }
+    label { display: block; font-weight: 600; margin-bottom: 0.4rem; font-size: 0.95rem; }
+    input, select {
+      width: 100%;
+      padding: 0.65rem 0.8rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+    }
+    input:focus, select:focus { outline: none; border-color: #4a90d9; box-shadow: 0 0 0 2px rgba(74,144,217,0.2); }
+    .field-hint { font-size: 0.82rem; color: #888; margin-top: -0.7rem; margin-bottom: 1rem; }
+    button {
+      background: #4a90d9;
+      color: white;
+      border: none;
+      padding: 0.7rem 1.8rem;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+      width: 100%;
+    }
+    button:hover { background: #3a7bc8; }
+    button:disabled { background: #aaa; cursor: not-allowed; }
+    .examples { margin-top: 2rem; }
+    .examples h2 { font-size: 1.1rem; margin-bottom: 0.8rem; }
+    .example {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 0.8rem;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .example:hover { border-color: #4a90d9; }
+    .example-title { font-weight: 600; margin-bottom: 0.3rem; }
+    .example-desc { font-size: 0.85rem; color: #666; }
+    .example-pid { font-size: 0.75rem; color: #999; font-family: monospace; word-break: break-all; }
+    .badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 3px;
+      font-weight: 600;
+      margin-left: 0.4rem;
+      vertical-align: middle;
+    }
+    .badge-public { background: #d4edda; color: #155724; }
+    .badge-private { background: #fff3cd; color: #856404; }
+    #status {
+      margin-top: 1rem;
+      padding: 0.8rem 1rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    #status.info { display: block; background: #d1ecf1; color: #0c5460; }
+    #status.error { display: block; background: #f8d7da; color: #721c24; }
+    #status.success { display: block; background: #d4edda; color: #155724; }
+    .steps { list-style: none; padding: 0; }
+    .steps li { padding: 0.2rem 0; font-size: 0.88rem; }
+    .steps li::before { content: ""; display: inline-block; width: 1.2rem; }
+    .steps li.done::before { content: "\2713 "; color: #28a745; }
+    .steps li.active::before { content: "\25CB "; color: #4a90d9; }
+    .steps li.pending::before { content: "\25CB "; color: #ccc; }
+    footer {
+      margin-top: 3rem;
+      padding: 1rem;
+      text-align: center;
+      font-size: 0.82rem;
+      color: #999;
+    }
+    footer a { color: #4a90d9; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>FDO2map</h1>
+    <p class="subtitle">Resolve a FAIR Digital Object and open it in an interactive map dashboard.</p>
+
+    <label for="pid">RO-Crate PID</label>
+    <input type="text" id="pid" placeholder="https://w3id.org/ro-id/..." />
+    <p class="field-hint">Paste an RO-Crate persistent identifier from ROHub</p>
+
+    <label for="token">API key <span style="font-weight:normal; color:#888">(optional, for private datasets)</span></label>
+    <input type="text" id="token" placeholder="Leave empty for public datasets" />
+    <p class="field-hint">Required only for datasets behind an authenticated proxy</p>
+
+    <button id="resolve" onclick="resolve()">Resolve and open dashboard</button>
+
+    <div id="status"></div>
+
+    <ul class="steps" id="steps" style="margin-top:1rem; display:none;">
+      <li id="step1" class="pending">Load RO-Crate from ROHub</li>
+      <li id="step2" class="pending">Find ViewAction annotations</li>
+      <li id="step3" class="pending">Resolve dataset URL</li>
+      <li id="step4" class="pending">Open dashboard</li>
+    </ul>
+
+    <div class="examples">
+      <h2>Examples</h2>
+
+      <div class="example" onclick="selectExample('https://w3id.org/ro-id/24600867-23ca-4b97-be14-3aa63883c056', '')">
+        <div class="example-title">RIOMAR ocean model <span class="badge badge-public">public</span></div>
+        <div class="example-desc">Temperature, salinity, sea surface height — Bay of Biscay, HEALPix level 13</div>
+        <div class="example-pid">https://w3id.org/ro-id/24600867-23ca-4b97-be14-3aa63883c056</div>
+      </div>
+
+      <div class="example" onclick="selectExample('https://w3id.org/ro-id/fdc1c071-76d7-44df-a565-8217ebcc59fe', '')">
+        <div class="example-title">Sentinel-2 B02 reflectance <span class="badge badge-public">public</span></div>
+        <div class="example-desc">HEALPix multiscale pyramid (levels 10–20), ~10m to ~10km resolution</div>
+        <div class="example-pid">https://w3id.org/ro-id/fdc1c071-76d7-44df-a565-8217ebcc59fe</div>
+      </div>
+
+      <div class="example" onclick="selectExample('https://w3id.org/ro-id/1f0b5044-ae4f-483d-b7a2-48a5a6ac3965', '')">
+        <div class="example-title">NorESM2 ARCTIC reanalysis <span class="badge badge-private">API key</span></div>
+        <div class="example-desc">Monthly SST and 3D temperature from NorESM2/BLOM, 2010–2018</div>
+        <div class="example-pid">https://w3id.org/ro-id/1f0b5044-ae4f-483d-b7a2-48a5a6ac3965</div>
+      </div>
+    </div>
+
+    <footer>
+      <a href="https://github.com/FAIR2Adapt/FDO2map">GitHub</a> &middot;
+      Part of <a href="https://fair2adapt.eu">FAIR2Adapt</a>
+    </footer>
+  </div>
+
+<script>
+const ROHUB_API = "https://api.rohub.org/api/";
+const RO_ID_PREFIX = "https://w3id.org/ro-id/";
+const POTENTIAL_ACTION = "https://schema.org/potentialAction";
+const VIEW_ACTION = "https://schema.org/ViewAction";
+const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+const URL_TEMPLATE = "https://schema.org/urlTemplate";
+const SCHEMA_OBJECT = "https://schema.org/object";
+
+function selectExample(pid, token) {
+  document.getElementById("pid").value = pid;
+  document.getElementById("token").value = token;
+}
+
+function setStatus(cls, msg) {
+  const el = document.getElementById("status");
+  el.className = cls;
+  el.textContent = msg;
+}
+
+function setStep(n, state) {
+  document.getElementById("step" + n).className = state;
+}
+
+async function fetchAllPages(url) {
+  const results = [];
+  let nextUrl = url;
+  while (nextUrl) {
+    const resp = await fetch(nextUrl);
+    if (!resp.ok) { return results; }
+    const data = await resp.json();
+    results.push(...(data.results || (Array.isArray(data) ? data : [])));
+    nextUrl = data.next || null;
+  }
+  return results;
+}
+
+async function fetchTriples(annotationId) {
+  return fetchAllPages(ROHUB_API + "annotations/" + annotationId + "/body/");
+}
+
+async function resolve() {
+  const pid = document.getElementById("pid").value.trim();
+  const token = document.getElementById("token").value.trim();
+
+  if (!pid) {
+    setStatus("error", "Please enter an RO-Crate PID.");
+    return;
+  }
+
+  if (!pid.startsWith(RO_ID_PREFIX)) {
+    setStatus("error", "PID must start with " + RO_ID_PREFIX);
+    return;
+  }
+
+  const roId = pid.replace(RO_ID_PREFIX, "").replace(/\/$/, "");
+  const stepsEl = document.getElementById("steps");
+  stepsEl.style.display = "block";
+  for (let i = 1; i <= 4; i++) { setStep(i, "pending"); }
+
+  document.getElementById("resolve").disabled = true;
+  setStatus("info", "Resolving...");
+
+  try {
+    // Step 1: Load annotations
+    setStep(1, "active");
+    const annotations = await fetchAllPages(ROHUB_API + "ros/" + roId + "/annotations/");
+    if (annotations.length === 0) {
+      throw new Error("No annotations found. Is this a valid RO-Crate?");
+    }
+    setStep(1, "done");
+
+    // Step 2: Collect triples, find ViewAction
+    setStep(2, "active");
+    let allTriples = [];
+    for (const annot of annotations) {
+      const triples = await fetchTriples(annot.identifier);
+      allTriples.push(...triples);
+    }
+
+    const actionTriple = allTriples.find(t => t.predicate === POTENTIAL_ACTION);
+    if (!actionTriple) {
+      throw new Error("No ViewAction found in this RO-Crate.");
+    }
+
+    const actionId = actionTriple.object;
+    const typeTriple = allTriples.find(t => t.subject === actionId && t.predicate === RDF_TYPE);
+    if (!typeTriple || typeTriple.object !== VIEW_ACTION) {
+      throw new Error("potentialAction is not a ViewAction.");
+    }
+
+    const templateTriple = allTriples.find(t => t.subject === actionId && t.predicate === URL_TEMPLATE);
+    if (!templateTriple) {
+      throw new Error("ViewAction has no urlTemplate.");
+    }
+    const template = templateTriple.object;
+    setStep(2, "done");
+
+    // Step 3: Resolve dataset URL
+    setStep(3, "active");
+    const objectTriple = allTriples.find(t => t.subject === actionId && t.predicate === SCHEMA_OBJECT);
+    let datasetUrl = null;
+
+    if (objectTriple) {
+      const resourceId = objectTriple.object.replace(/\/$/, "").split("/").pop();
+      const resources = await fetchAllPages(ROHUB_API + "ros/" + roId + "/resources/");
+      const match = resources.find(r => r.identifier === resourceId);
+      if (match && match.url) {
+        datasetUrl = match.url;
+      } else {
+        const dataset = resources.find(r => r.type === "Dataset");
+        if (dataset) { datasetUrl = dataset.url; }
+      }
+    }
+
+    if (!datasetUrl) {
+      throw new Error("Could not resolve dataset URL from RO-Crate resources.");
+    }
+    setStep(3, "done");
+
+    // Step 4: Build URL and open
+    setStep(4, "active");
+    let finalUrl = template.replace("{dataset_url}", datasetUrl);
+    if (token) {
+      finalUrl += "::token=" + token;
+    }
+
+    setStatus("success", "Resolved! Opening dashboard...");
+    setStep(4, "done");
+
+    // Small delay so user can see the success state
+    setTimeout(() => { window.open(finalUrl, "_blank"); }, 500);
+
+  } catch (err) {
+    setStatus("error", err.message);
+  } finally {
+    document.getElementById("resolve").disabled = false;
+  }
+}
+
+// Check URL hash for a PID (allows linking directly)
+if (location.hash.length > 1) {
+  const hashPid = decodeURIComponent(location.hash.substring(1));
+  if (hashPid.startsWith(RO_ID_PREFIX)) {
+    document.getElementById("pid").value = hashPid;
+  }
+}
+</script>
+</body>
+</html>
