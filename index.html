@@ -270,8 +270,11 @@ async function resolve() {
     setStep(3, "done");
 
     // Step 4: Build URL and open
+    // Pass the RO-Crate PID to the dashboard (not the dataset URL)
+    // so the dashboard can show the metadata panel
     setStep(4, "active");
-    let finalUrl = template.replace("{dataset_url}", datasetUrl);
+    const dashboardBase = template.split("#")[0];
+    let finalUrl = dashboardBase + "#" + pid;
     if (token) {
       finalUrl += "::token=" + token;
     }
